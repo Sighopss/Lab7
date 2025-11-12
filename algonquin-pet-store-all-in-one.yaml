@@ -1,11 +1,12 @@
 #algonquin-pet-store-all-in-one.yaml
 
-# RabbitMQ Deployment
+# RabbitMQ StatefulSet
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: rabbitmq
 spec:
+  serviceName: rabbitmq
   replicas: 1
   selector:
     matchLabels:
@@ -26,6 +27,9 @@ spec:
               value: "myuser"
             - name: RABBITMQ_DEFAULT_PASS
               value: "mypassword"
+          volumeMounts:
+            - name: rabbitmq-data
+              mountPath: /var/lib/rabbitmq/mnesia
           resources:
             requests:
               memory: "256Mi"
@@ -33,6 +37,17 @@ spec:
             limits:
               memory: "512Mi"
               cpu: "500m"
+  volumeClaimTemplates:
+    - metadata:
+        name: rabbitmq-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 5Gi
+        # Update to match an available StorageClass in the Kubernetes cluster
+        storageClassName: standard
 
 ---
 # RabbitMQ Service
